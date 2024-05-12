@@ -1,0 +1,26 @@
+{
+  "name": "lambda-sqs",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "deploy": "npm run build && serverless deploy"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/uuid": "^9.0.8",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@types/aws-lambda": "^8.10.137",
+    "dotenv": "^16.4.5",
+    "mongodb": "^6.6.1",
+    "tslib": "^2.6.2",
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5",
+    "aws-sdk": "^2.1618.0"
+  }
+}

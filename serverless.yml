@@ -1,0 +1,92 @@
+service: lambda-sqs-service
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-2
+
+resources:
+  Resources:
+    hrisBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: hris-bucket1
+        NotificationConfiguration:
+          QueueConfigurations:
+            - Event: s3:ObjectCreated:*
+              Queue: !GetAtt hrisQueue.Arn
+
+    hrisQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: hris-queue1
+
+    hrisQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref hrisQueue
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: s3.amazonaws.com
+              Action: sqs:*
+              Resource: !GetAtt hrisQueue.Arn
+
+    hrisFunction1Role:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: hris-function1-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: lambda-sqs-cloudwatch-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: arn:aws:logs:*:*:*
+                - Effect: Allow
+                  Action:
+                    - sqs:ReceiveMessage
+                    - sqs:DeleteMessage
+                    - sqs:GetQueueAttributes
+                  Resource: !GetAtt hrisQueue.Arn       
+          - PolicyName: s3-read-access-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                    - s3:ListBucket
+                  Resource:
+                    - !GetAtt hrisBucket.Arn 
+                    - !Join ['', [!GetAtt hrisBucket.Arn, '/*']]    
+
+functions:
+  hrisFunction1:
+    handler: dist/lambda/index.handler
+    environment:
+      MONGODB_URI: "mongodb+srv://rootuser:rootuser1234@cluster0.jx3wvch.mongodb.net/?retryWrites=true&w=majority&appName=cluster0"
+    events:
+      - sqs:
+          arn: !GetAtt hrisQueue.Arn
+    role: !GetAtt hrisFunction1Role.Arn
+
+custom:
+  dotenv:
+    path: .env
+    include:
+      - MONGODB_URI
