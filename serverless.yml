@@ -78,15 +78,7 @@ resources:
 functions:
   hrisFunction1:
     handler: dist/lambda/index.handler
-    environment:
-      MONGODB_URI: "mongodb+srv://rootuser:rootuser1234@cluster0.jx3wvch.mongodb.net/?retryWrites=true&w=majority&appName=cluster0"
     events:
       - sqs:
           arn: !GetAtt hrisQueue.Arn
     role: !GetAtt hrisFunction1Role.Arn
-
-custom:
-  dotenv:
-    path: .env
-    include:
-      - MONGODB_URI
